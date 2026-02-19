@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crosstalk Mobile | Peplink Cellular Signal Cheat Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ct-blue: #1a3a6b;
+    --ct-orange: #e8621a;
+    --ct-gray: #8e8e8e;
+    --ct-dark: #1a1a2e;
+    --ct-light: #f4f6fa;
+    --excellent: #1db954;
+    --good: #7bc67e;
+    --fair: #f5c542;
+    --poor: #e87040;
+    --no-signal: #d93025;
+    --card-bg: #ffffff;
+    --shadow: 0 2px 16px rgba(26,58,107,0.07);
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ct-light);
+    color: var(--ct-dark);
+    min-height: 100vh;
+    padding: 0;
+  }
+  .header {
+    background: #ffffff;
+    padding: 44px 32px 36px;
+    text-align: center;
+    position: relative;
+    border-bottom: 3px solid var(--ct-orange);
+  }
+  .header .logo {
+    width: 190px;
+    margin-bottom: 22px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .header h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.3rem;
+    color: var(--ct-blue);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .header .subtitle {
+    color: var(--ct-gray);
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+  }
+  .content {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 28px 20px 64px;
+  }
+  .intro {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    border-left: 4px solid var(--ct-orange);
+  }
+  .intro h2 {
+    font-size: 1.1rem;
+    color: var(--ct-blue);
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+  .intro p {
+    font-size: 0.93rem;
+    line-height: 1.7;
+    color: #444;
+  }
+  .intro p + p { margin-top: 10px; }
+  .intro strong { color: var(--ct-dark); }
+  .signal-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .signal-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px;
+    background: var(--ct-blue);
+    color: #fff;
+  }
+  .signal-card__title {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+  }
+  .signal-card__badge {
+    font-size: 0.72rem;
+    background: rgba(255,255,255,0.15);
+    padding: 4px 12px;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .signal-card__desc {
+    padding: 16px 28px;
+    font-size: 0.88rem;
+    color: #666;
+    line-height: 1.6;
+    border-bottom: 1px solid #eef1f6;
+  }
+  .signal-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .signal-table th {
+    text-align: left;
+    padding: 12px 28px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #999;
+    font-weight: 600;
+    background: #fafbfd;
+    border-bottom: 1px solid #eef1f6;
+  }
+  .signal-table td {
+    padding: 14px 28px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f0f2f7;
+    vertical-align: middle;
+  }
+  .signal-table tr:last-child td { border-bottom: none; }
+  .signal-table .val {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.88rem;
+    white-space: nowrap;
+  }
+  .signal-table .desc-text { color: #555; line-height: 1.55; }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .status-pill .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .status-pill.excellent { background: rgba(29,185,84,0.1); color: #15803d; }
+  .status-pill.excellent .dot { background: var(--excellent); }
+  .status-pill.good { background: rgba(123,198,126,0.15); color: #3d7a40; }
+  .status-pill.good .dot { background: var(--good); }
+  .status-pill.fair { background: rgba(245,197,66,0.15); color: #92700c; }
+  .status-pill.fair .dot { background: var(--fair); }
+  .status-pill.poor { background: rgba(232,112,64,0.12); color: #b04520; }
+  .status-pill.poor .dot { background: var(--poor); }
+  .status-pill.no-signal { background: rgba(217,48,37,0.1); color: #b91c1c; }
+  .status-pill.no-signal .dot { background: var(--no-signal); }
+  .howto-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .howto-card__header {
+    display: flex;
+    align-items: center;
+    padding: 18px 28px;
+    background: linear-gradient(135deg, var(--ct-orange) 0%, #c44e10 100%);
+    color: #fff;
+  }
+  .howto-card__title {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .howto-step {
+    padding: 24px 28px;
+    border-bottom: 1px solid #eef1f6;
+  }
+  .howto-step:last-child { border-bottom: none; }
+  .howto-step__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .howto-step__number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--ct-blue);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .howto-step__title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--ct-dark);
+  }
+  .howto-step__desc {
+    font-size: 0.88rem;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    padding-left: 40px;
+  }
+  .howto-step__img {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #e2e6ee;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .howto-step__note {
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: #f0f4fb;
+    border-radius: 10px;
+    border-left: 3px solid var(--ct-blue);
+    font-size: 0.86rem;
+    color: #444;
+    line-height: 1.65;
+  }
+  .howto-step__note strong { color: var(--ct-blue); }
+  .howto-step__note p + p { margin-top: 8px; }
+  .footer {
+    text-align: center;
+    padding: 32px 20px 24px;
+    color: #aaa;
+    font-size: 0.78rem;
+    letter-spacing: 0.3px;
+  }
+  .footer a {
+    color: var(--ct-orange);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  @media (max-width: 640px) {
+    .header { padding: 32px 20px 28px; }
+    .header h1 { font-size: 1.05rem; }
+    .header .logo { width: 150px; }
+    .signal-card__header, .howto-card__header { padding: 14px 18px; }
+    .signal-table th, .signal-table td { padding: 10px 16px; font-size: 0.82rem; }
+    .intro { padding: 20px 18px; }
+    .signal-card__desc { padding: 12px 18px; }
+    .howto-step { padding: 18px 18px; }
+    .howto-step__desc { padding-left: 0; }
+  }
+  @media print {
+    body { background: #fff; }
+    .signal-card, .howto-card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img class="logo" src="images/logo.png" alt="Crosstalk Mobile">
+  <h1>Peplink Cellular Signal Cheat Sheet</h1>
+  <p class="subtitle">Quick reference for understanding your LTE / 5G signal metrics</p>
+</div>
+
+<div class="content">
+
+  <div class="intro">
+    <h2>How to Read Your Signal</h2>
+    <p>
+      Your Peplink router reports four key cellular metrics. <strong>RSRP</strong> is generally the best single indicator of overall signal strength, as it isolates the reference signal from the tower you're connected to. For deeper troubleshooting, compare <strong>SINR</strong> (noise interference), <strong>RSRQ</strong> (signal quality), and <strong>RSSI</strong> (total received power) to pinpoint performance issues.
+    </p>
+    <p>
+      Keep in mind: strong signal strength (RSRP) doesn't guarantee fast speeds. If SINR or RSRQ are poor, interference or congestion may be limiting your throughput. Always evaluate these metrics together for the full picture.
+    </p>
+  </div>
+
+  <!-- How-To -->
+  <div class="howto-card">
+    <div class="howto-card__header">
+      <span class="howto-card__title">Finding Your Signal Values in Peplink</span>
+    </div>
+    <div class="howto-step">
+      <div class="howto-step__label">
+        <span class="howto-step__number">1</span>
+        <span class="howto-step__title">Open the Dashboard and Click the Cellular IP Address</span>
+      </div>
+      <p class="howto-step__desc">
+        From the Peplink <strong>Dashboard</strong>, locate your active cellular connection under <strong>WAN Connection Status</strong>. Click the <strong>IP address</strong> next to the cellular modem you want to inspect. This opens the details panel.
+      </p>
+      <img class="howto-step__img" src="images/step1.png" alt="Step 1: Click the cellular IP address on the Peplink dashboard">
+    </div>
+    <div class="howto-step">
+      <div class="howto-step__label">
+        <span class="howto-step__number">2</span>
+        <span class="howto-step__title">View Connection Type, Bands, and Signal Values</span>
+      </div>
+      <p class="howto-step__desc">
+        In the details panel, scroll to the <strong>Band</strong> section (highlighted in red below). Here you'll see the connection type, the active band(s), and all four signal metrics (<strong>RSSI</strong>, <strong>SINR</strong>, <strong>RSRP</strong>, and <strong>RSRQ</strong>) displayed inline. Use the reference tables below to evaluate each value.
+      </p>
+      <img class="howto-step__img" src="images/step2.png" alt="Step 2: View connection type, bands, and signal values">
+      <div class="howto-step__note">
+        <p>
+          <strong>What we're seeing here:</strong> This modem is connected to T-Mobile on <strong>5G SA (Standalone)</strong>. That means it is running purely on the 5G NR (New Radio) core network with no LTE anchor required. You can confirm this by the "5G SA" label next to <strong>Network</strong>.
+        </p>
+        <p>
+          Notice the modem is using <strong>three bands simultaneously</strong>: the primary band is <strong>n41 (2500 MHz)</strong> with full signal metrics shown (RSSI, SINR, RSRP, RSRQ), plus two secondary bands via <strong>SSC (Secondary Component Carriers)</strong>: <strong>n25 (1900 MHz)</strong> and <strong>n71 (600 MHz)</strong>. This is called <strong>carrier aggregation</strong>, where the modem combines multiple bands at once to increase total throughput.
+        </p>
+        <p>
+          <strong>On LTE connections</strong>, you'll see a similar setup. The router may display a primary band plus one or more secondary bands aggregated together. As a general rule: <strong>the more bands being aggregated, the more bandwidth available, and the faster your potential speeds.</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- RSRP -->
+  <div class="signal-card">
+    <div class="signal-card__header">
+      <span class="signal-card__title">RSRP</span>
+      <span class="signal-card__badge">Primary Indicator</span>
+    </div>
+    <div class="signal-card__desc">
+      <strong>Reference Signal Received Power</strong> measures the average power of the reference signal from your serving cell (the tower you're connected to), isolated from noise and interference. This makes it the most reliable indicator of how strong your connection to the tower actually is. 3GPP defined range: <strong>-44 dBm</strong> (strongest) to <strong>-140 dBm</strong> (weakest).
+    </div>
+    <table class="signal-table">
+      <thead><tr><th>Value</th><th>Rating</th><th>What It Means</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="val">&ge; -80 dBm</td>
+          <td><span class="status-pill excellent"><span class="dot"></span>Excellent</span></td>
+          <td class="desc-text">Strong signal with maximum data speeds</td>
+        </tr>
+        <tr>
+          <td class="val">-80 to -90 dBm</td>
+          <td><span class="status-pill good"><span class="dot"></span>Good</span></td>
+          <td class="desc-text">Solid signal with good, reliable data speeds</td>
+        </tr>
+        <tr>
+          <td class="val">-90 to -100 dBm</td>
+          <td><span class="status-pill fair"><span class="dot"></span>Fair to Poor</span></td>
+          <td class="desc-text">Usable, but may experience drop-outs. Performance degrades as values approach -100</td>
+        </tr>
+        <tr>
+          <td class="val">&le; -100 dBm</td>
+          <td><span class="status-pill no-signal"><span class="dot"></span>No Signal</span></td>
+          <td class="desc-text">Connection lost. Consider repositioning antennas or switching carriers</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SINR -->
+  <div class="signal-card">
+    <div class="signal-card__header">
+      <span class="signal-card__title">SINR / SNR</span>
+      <span class="signal-card__badge">Noise Ratio</span>
+    </div>
+    <div class="signal-card__desc">
+      <strong>Signal-to-Interference-plus-Noise Ratio</strong> compares the power of your desired signal against all interference and background noise combined. Higher is better. SINR is a key driver of actual throughput: even with strong RSRP, low SINR means your modem can't use higher-order modulation, resulting in slower speeds. Not defined in 3GPP specs but widely used by UE vendors and operators.
+    </div>
+    <table class="signal-table">
+      <thead><tr><th>Value</th><th>Rating</th><th>What It Means</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="val">&ge; 20 dB</td>
+          <td><span class="status-pill excellent"><span class="dot"></span>Excellent</span></td>
+          <td class="desc-text">Very clean signal with maximum throughput achievable</td>
+        </tr>
+        <tr>
+          <td class="val">13 to 20 dB</td>
+          <td><span class="status-pill good"><span class="dot"></span>Good</span></td>
+          <td class="desc-text">Low interference with solid, reliable performance</td>
+        </tr>
+        <tr>
+          <td class="val">0 to 13 dB</td>
+          <td><span class="status-pill fair"><span class="dot"></span>Fair to Poor</span></td>
+          <td class="desc-text">Noise is competing with your signal. Speeds drop significantly near 0 dB</td>
+        </tr>
+        <tr>
+          <td class="val">&le; 0 dB</td>
+          <td><span class="status-pill no-signal"><span class="dot"></span>No Signal</span></td>
+          <td class="desc-text">Noise overpowers signal. Expect disconnection</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RSRQ -->
+  <div class="signal-card">
+    <div class="signal-card__header">
+      <span class="signal-card__title">RSRQ</span>
+      <span class="signal-card__badge">Signal Quality</span>
+    </div>
+    <div class="signal-card__desc">
+      <strong>Reference Signal Received Quality</strong> is a ratio derived from RSRP and RSSI (formula: RSRQ = N x RSRP / RSSI, where N = number of resource blocks). This tells you how clean your reference signal is relative to all the power in the channel. Especially useful at cell edges where handover decisions are made. 3GPP reporting range: <strong>-3 dB</strong> (best) to <strong>-19.5 dB</strong> (worst).
+    </div>
+    <table class="signal-table">
+      <thead><tr><th>Value</th><th>Rating</th><th>What It Means</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="val">&ge; -10 dB</td>
+          <td><span class="status-pill excellent"><span class="dot"></span>Excellent</span></td>
+          <td class="desc-text">High-quality signal with a clean connection and maximum speeds</td>
+        </tr>
+        <tr>
+          <td class="val">-10 to -15 dB</td>
+          <td><span class="status-pill good"><span class="dot"></span>Good</span></td>
+          <td class="desc-text">Good quality with reliable speeds and minimal interference</td>
+        </tr>
+        <tr>
+          <td class="val">-15 to -20 dB</td>
+          <td><span class="status-pill fair"><span class="dot"></span>Fair to Poor</span></td>
+          <td class="desc-text">Quality degrading. Possible congestion or cell-edge conditions. Performance drops sharply near -20</td>
+        </tr>
+        <tr>
+          <td class="val">&le; -20 dB</td>
+          <td><span class="status-pill no-signal"><span class="dot"></span>No Signal</span></td>
+          <td class="desc-text">Signal quality too low to maintain connection</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RSSI -->
+  <div class="signal-card">
+    <div class="signal-card__header">
+      <span class="signal-card__title">RSSI</span>
+      <span class="signal-card__badge">Total Power</span>
+    </div>
+    <div class="signal-card__desc">
+      <strong>Received Signal Strength Indicator</strong> is the total wideband received power across the entire channel bandwidth, including your serving cell, neighboring cells, interference, and thermal noise. Because it lumps everything together, a strong RSSI doesn't necessarily mean a good connection. Always check RSRP, SINR, and RSRQ alongside it.
+    </div>
+    <table class="signal-table">
+      <thead><tr><th>Value</th><th>Rating</th><th>What It Means</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="val">&gt; -65 dBm</td>
+          <td><span class="status-pill excellent"><span class="dot"></span>Excellent</span></td>
+          <td class="desc-text">Very strong total power under optimal conditions</td>
+        </tr>
+        <tr>
+          <td class="val">-65 to -75 dBm</td>
+          <td><span class="status-pill good"><span class="dot"></span>Good</span></td>
+          <td class="desc-text">Healthy power level with good speeds expected</td>
+        </tr>
+        <tr>
+          <td class="val">-75 to -85 dBm</td>
+          <td><span class="status-pill fair"><span class="dot"></span>Fair</span></td>
+          <td class="desc-text">Usable power level. Speeds are adequate but drop-outs are possible</td>
+        </tr>
+        <tr>
+          <td class="val">-85 to -95 dBm</td>
+          <td><span class="status-pill poor"><span class="dot"></span>Poor</span></td>
+          <td class="desc-text">Low power. Performance will be severely degraded</td>
+        </tr>
+        <tr>
+          <td class="val">&le; -95 dBm</td>
+          <td><span class="status-pill no-signal"><span class="dot"></span>No Signal</span></td>
+          <td class="desc-text">Insufficient power. Connection will drop</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="footer">
+  &copy; 2026 Crosstalk Mobile | <a href="https://crosstalkmobile.com" target="_blank">crosstalkmobile.com</a>
+</div>
+
+</body>
+</html>
